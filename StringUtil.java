@@ -222,33 +222,6 @@ public class StringUtil {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
     };
 
-
-    /**
-     * 分页参数处理
-     */
-    private static final String CURRENT_PAGE="currentPage";
-    private static final String PAGE_SIZE="pageSize";
-    public static Map<String,Integer> getPageParam(Map<String,Object> paramMap){
-        int startPage;
-        int size;
-        if (paramMap.get(CURRENT_PAGE)!=null){
-            String pageNum = (String) paramMap.get("currentPage");
-            startPage=Integer.parseInt(pageNum);
-        }else {
-            startPage=1;
-        }
-        if (paramMap.get(PAGE_SIZE)!=null){
-            String pageSize = (String) paramMap.get("pageSize");
-            size=Integer.parseInt(pageSize);
-        }else {
-            size=10;
-        }
-        Map<String,Integer> resultMap = new HashMap<>(16);
-        resultMap.put("currentPage",startPage);
-        resultMap.put("pageSize",size);
-        return resultMap;
-    }
-
     /**
      * 拼接 % %,模糊查询参数
      * @param str 拼接字符
@@ -264,6 +237,143 @@ public class StringUtil {
             return null;
         }
     }
+    
+    
+    private static Pattern p = Pattern.compile("(\\d+)");
+    private static Pattern p2 = Pattern.compile("(\\d+\\.\\d+)");
+    private static Pattern p3 = Pattern.compile("(\\d+)");
 
+    /**
+     * 提取字符串中的 ，金额
+     * @param str 提取字符
+     * @return String
+     */
+    public static String getNumber(String str){
+        //先判断有没有整数，如果没有整数那就肯定就没有小数
+        Matcher m = p.matcher(str);
+        String result = "";
+        if (m.find()) {
+            Map<Integer, String> map = new TreeMap();
+            m = p2.matcher(str);
+            //遍历小数部分
+            while (m.find()) {
+                result = m.group(1) == null ? "" : m.group(1);
+                int i = str.indexOf(result);
+                String s = str.substring(i, i + result.length());
+                map.put(i, s);
+                //排除小数的整数部分和另一个整数相同的情况下，寻找整数位置出现错误的可能，还有就是寻找重复的小数
+                // 例子中是排除第二个345.56时第一个345.56产生干扰和寻找整数345的位置时，前面的小数345.56会干扰
+                str = str.substring(0, i) + str.substring(i + result.length());
+            }
+            //遍历整数
+            m = p3.matcher(str);
+            while (m.find()) {
+                result = m.group(1) == null ? "" : m.group(1);
+                int i = str.indexOf(result);
+                //排除jia567.23.23在第一轮过滤之后留下来的jia.23对整数23产生干扰
+                if (String.valueOf(str.charAt(i - 1)).equals(".")) {
+                    //将这个字符串删除
+                    str = str.substring(0, i - 1) + str.substring(i + result.length());
+                    continue;
+                }
+                String s = str.substring(i, i + result.length());
+                map.put(i, s);
+                str = str.substring(0, i) + str.substring(i + result.length());
+            }
+            result = "";
+            for (Map.Entry<Integer, String> e : map.entrySet()) {
+                result += e.getValue() + ",";
+            }
+            result = result.substring(0, result.length()-1);
+        } else {
+            result = "";
+        }
+        return result;
+    }
 
+    /**
+     * 	作用：生成签名 key-value 形式
+     */
+    public static String getSign(Map<String,String> paramMap){
+        String params = formatBizQueryParaMap(paramMap, true, false,"test");
+        params = EncryptionUtil.MD5Encode(params,"utf-8").toUpperCase();
+        return params;
+    }
+
+    public static String formatBizQueryParaMap(Map<String,String> para,boolean sort, boolean encode,String keyValue){
+        List<String> keys = new ArrayList<>(para.keySet());
+        if (sort){
+            Collections.sort(keys);
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < keys.size(); i++) {
+            String key = keys.get(i);
+            String value = para.get(key);
+            if (encode) {
+                try {
+                    value = URLEncoder.encode(value, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                }
+            }
+            if (null != value && !"".equals(value) && !"sign".equals(value) && !"key".equals(key)){
+                sb.append(key).append(QSTRING_EQUAL).append(value).append(QSTRING_SPLIT);
+            }
+        }
+        sb.append("key=").append(keyValue);
+        System.out.println("签名字符串："+sb.toString());
+        return sb.toString();
+    }
+    /** = */
+    public static final String QSTRING_EQUAL = "=";
+    /** & */
+    public static final String QSTRING_SPLIT = "&";
+
+    /**
+     * 对象装换map
+     * @param obj
+     * @return
+     */
+    public static Map<String, String> transBean2Map(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        Map<String, String> map = new HashMap<>(16);
+        try {
+            BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
+            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+            for (PropertyDescriptor property : propertyDescriptors) {
+                String key = property.getName();
+                // 过滤class属性
+                if (!key.equals("class") && !key.equals("pageNo") && !key.equals("pageSize") && !key.equals("custId")) {
+                    // 得到property对应的getter方法
+                    Method getter = property.getReadMethod();
+                    if (getter.invoke(obj)!=null){
+                        String value = getter.invoke(obj).toString();
+                        map.put(key, value);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("transBean2Map Error " + e);
+        }
+        return map;
+    }
+    
+    /**
+     * 产生4位随机数(0000-9999)
+     * @return 4位随机数
+    */
+    public static String getFourRandom(){
+        Random random = new Random();
+        String fourRandom = random.nextInt(10000) + "";
+        int randLength = fourRandom.length();
+        if(randLength<4){
+            for(int i=1; i<=4-randLength; i++) {
+                fourRandom = "0" + fourRandom;
+            }
+        }
+        return fourRandom;
+    }
+    
+    
 }
