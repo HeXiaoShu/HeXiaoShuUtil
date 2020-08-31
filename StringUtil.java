@@ -375,5 +375,15 @@ public class StringUtil {
         return fourRandom;
     }
     
+    /**
+     * o如果为null则赋值 o2
+     * @param o  o
+     * @param o2 o2
+     * @return obj
+     */
+    public static Object putIf(Object o,Object o2){
+        Optional<Object> optional = Optional.ofNullable(o);
+        return optional.orElse(o2);
+    }
     
 }
