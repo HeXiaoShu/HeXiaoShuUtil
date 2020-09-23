@@ -386,4 +386,14 @@ public class StringUtil {
         return optional.orElse(o2);
     }
     
+    /**
+     * 字符串在某集合出现的次数
+     * @param list
+     * @param str
+     * @return
+     */
+    public static int strListRepeCount(List<String> list,String str){
+        return (int) list.stream().filter(e -> e.equals(str)).count();
+    }
+    
 }
