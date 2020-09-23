@@ -112,6 +112,73 @@ public class DateUtil {
     public static Long secondTimestamp(){
         return System.currentTimeMillis() / 1000;
     }
+    
+    /**
+     * 获取本月第一天
+     * @return String
+     */
+    public static String firstDayOfMonth(){
+        LocalDateTime date = LocalDateTime.now();
+        LocalDateTime firstday = date.with(TemporalAdjusters.firstDayOfMonth());
+        return firstday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
 
+    /**
+     * 获取本月最后一天
+     * @return String
+     */
+    public static String lastDayOfMonth(){
+        LocalDateTime date = LocalDateTime.now();
+        LocalDateTime lastDay = date.with(TemporalAdjusters.lastDayOfMonth());
+        return lastDay.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    /**
+     * 获取两个long型 日期 之间间隔天数
+     * @param start
+     * @param end
+     * @return
+     */
+    public static long longDaysBetween(Long start,Long end){
+        LocalDate startDate =LocalDate.parse(String.valueOf(start), DateTimeFormatter.ofPattern("yyyyMMdd"));
+        LocalDate endDate = LocalDate.parse(String.valueOf(end), DateTimeFormatter.ofPattern("yyyyMMdd"));
+        return ChronoUnit.DAYS.between(startDate, endDate);
+    }
+
+    /**
+     * 获取两日期之间间隔的天数
+     *
+     * @param smdate 较小的时间
+     * @param bdate  较大的时间
+     * @return 相差天数
+     */
+    public static int daysBetween(Date smdate, Date bdate) {
+        long between_days = 0;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            smdate = sdf.parse(sdf.format(smdate));
+            bdate = sdf.parse(sdf.format(bdate));
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(smdate);
+            long time1 = cal.getTimeInMillis();
+            cal.setTime(bdate);
+            long time2 = cal.getTimeInMillis();
+            between_days = (time2 - time1) / (1000 * 3600 * 24);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return Integer.parseInt(String.valueOf(between_days));
+    }
+
+    public static Date parse(String date, String format) {
+
+        try {
+            return new SimpleDateFormat(format).parse(date);
+        } catch (ParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 }
