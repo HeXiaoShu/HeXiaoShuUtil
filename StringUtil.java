@@ -424,4 +424,20 @@ public class StringUtil {
         return result;
     }
     
+    
+    /**
+     * 概率中奖
+     * @param percent 中奖几率
+     */
+    public static boolean probability(double percent){
+        boolean flag=false;
+        double c = percent * 100;
+        int p=(int)c;
+        Random random = new Random();
+        int randomInt =  random.nextInt(99);
+        if(randomInt < p){
+            flag=true;
+        }
+        return flag;
+    }
 }
