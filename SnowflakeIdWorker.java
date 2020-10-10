@@ -1,4 +1,4 @@
-package com.util;
+package com.wechatshop.util;
 
 /**
  * <li>0 - 0000000000 0000000000 0000000000 0000000000 0 - 00000 - 00000 - 000000000000</li>
@@ -10,8 +10,8 @@ package com.util;
  * <li>12位序列，毫秒内的计数，12位的计数顺序号支持每个节点每毫秒(同一机器，同一时间截)产生4096个ID序号加起来刚好64位，为一个Long型。</li>
  * <li>SnowFlake的优点是，整体上按照时间自增排序，并且整个分布式系统内不会产生ID碰撞(由数据中心ID和机器ID作区分)，并且效率较高。经测试，SnowFlake每秒能够产生26万ID左右。</li>
  * 
- * @desc: ld-common.SnowflakeIdWorker.java
- * @author: jesse
+ * @desc: 高并发多节点时，设置 # 工作机器ID(0~31) workId,在yaml配置，snowflake-id-worker: 1 ，启动jar时改变wordId的值。
+ * @author: xiaoshu
  * @history:
  * @version: v1.0
  */
@@ -141,6 +141,11 @@ public class SnowflakeIdWorker {
 	private static SnowflakeIdWorker snowflakeIdWorker = new SnowflakeIdWorker(0, 0);
 
 	public static long id() {
+		return snowflakeIdWorker.nextId();
+	}
+
+	public static long id(long workerId) {
+		snowflakeIdWorker.workerId=workerId;
 		return snowflakeIdWorker.nextId();
 	}
 
