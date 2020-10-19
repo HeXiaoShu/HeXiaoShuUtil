@@ -207,6 +207,40 @@ public class RedisUtil {
     public Double hIncrByFloat(String key, Object field, double delta) {
         return stringRedisTemplate.opsForHash().increment(key, field, delta);
     }
+    
+    // ------------------- bitmap 位图操作 -------------//
+
+    public Boolean setBit(String key, Integer index, Boolean tag) {
+        return stringRedisTemplate.execute((RedisCallback<Boolean>) con -> con.setBit(key.getBytes(), index, tag));
+    }
+
+    public Boolean getBit(String key, Integer index) {
+        return stringRedisTemplate.execute((RedisCallback<Boolean>) con -> con.getBit(key.getBytes(), index));
+    }
+
+    /**
+     * 统计bitmap中，value为1的个数，非常适用于统计网站的每日活跃用户数等类似的场景
+     *
+     * @param key
+     * @return
+     */
+    public Long bitCount(String key) {
+        return stringRedisTemplate.execute((RedisCallback<Long>) con -> con.bitCount(key.getBytes()));
+    }
+
+    public Long bitCount(String key, int start, int end) {
+        return stringRedisTemplate.execute((RedisCallback<Long>) con -> con.bitCount(key.getBytes(), start, end));
+    }
+
+    public Long bitOp(RedisStringCommands.BitOperation op, String saveKey, String... desKey) {
+        byte[][] bytes = new byte[desKey.length][];
+        for (int i = 0; i < desKey.length; i++) {
+            bytes[i] = desKey[i].getBytes();
+        }
+        return stringRedisTemplate.execute((RedisCallback<Long>) con -> con.bitOp(op, saveKey.getBytes(), bytes));
+    }
+
+    // ------------------------------------------------//
 
 
     // ------------------- Hash 操作 -------------//
